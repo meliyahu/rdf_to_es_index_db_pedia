@@ -3,14 +3,17 @@ from urllib.parse import unquote
 from elasticsearch import helpers
 from elasticsearch import Elasticsearch
 import sys
-import importlib.reload as reload
+# import importlib.reload as reload
+#
+# reload(sys)
 
-reload(sys)
-
-sys.setdefaultencoding('utf8')
+# sys.setdefaultencoding('utf8')
 
 # Download of data http://downloads.dbpedia.org/2016-04/core-i18n/en/page_links_en.ttl.bz2
-filename = "/Users/mosheh/git/mosheh-repo/ontology/page_links_en.ttl.bz2"
+# filename = "/Users/mosheh/git/mosheh-repo/ontology/page_links_en.ttl.bz2"
+# filename = "/Users/mosheh/git/mosheh-repo/ontology/rdf_to_es_index_db_pedia/mini_db_pedia.ttl"
+filename = "./mini_db_pedia.ttl"
+
 indexName = "dbpedialinks"
 docTypeName = "article"
 
@@ -21,13 +24,14 @@ es = Elasticsearch()
 
 print("Wiping any existing index...")
 es.indices.delete(index=indexName, ignore=[400, 404])
+print("Index Wiped....")
+
 indexSettings = {
     "settings": {
         "number_of_shards": 1,
         "number_of_replicas": 0,
     },
     "mappings": {
-        docTypeName: {
             "properties": {
                 "subject": {
                     "type": "keyword",
@@ -54,7 +58,6 @@ indexSettings = {
                     }
                 }
             }
-        }
     }
 }
 es.indices.create(index=indexName, body=indexSettings)
@@ -84,7 +87,8 @@ def newArticle(subject):
     return article
 
 
-with os.popen('bzip2 -cd ' + filename) as file:
+# with os.popen('bzip2 -cd ' + filename) as file:
+with os.popen(filename) as file:
     for line in file:
         # m = linePattern.match(unicode(line))
         m = linePattern.match(line.decode('UTF-8'))
@@ -94,6 +98,8 @@ with os.popen('bzip2 -cd ' + filename) as file:
             # to from_article_name appear in contiguous lines.
             subject = unquote(m.group(1)).replace('_', ' ')
             linkedSubject = unquote(m.group(2)).replace('_', ' ')
+
+            print(f'Subject {subject}')
 
             if rowNum == 0:
                 article = newArticle(subject)
