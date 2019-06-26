@@ -1,14 +1,16 @@
 import bz2, os, re
-from urllib2 import unquote
+from urllib.parse import unquote
 from elasticsearch import helpers
 from elasticsearch import Elasticsearch
 import sys
+import importlib.reload as reload
 
 reload(sys)
+
 sys.setdefaultencoding('utf8')
 
 # Download of data http://downloads.dbpedia.org/2016-04/core-i18n/en/page_links_en.ttl.bz2
-filename = "/Users/Mark/Documents/work/irdata/dbpedia/page_links_en.ttl.bz2"
+filename = "/Users/mosheh/git/mosheh-repo/ontology/page_links_en.ttl.bz2"
 indexName = "dbpedialinks"
 docTypeName = "article"
 
@@ -17,7 +19,7 @@ linePattern = re.compile(r'<http://dbpedia.org/resource/([^>]*)> <[^>]*> <http:/
 
 es = Elasticsearch()
 
-print "Wiping any existing index..."
+print("Wiping any existing index...")
 es.indices.delete(index=indexName, ignore=[400, 404])
 indexSettings = {
     "settings": {
@@ -72,6 +74,7 @@ def addLink(article, subject):
     else:
         article["linked_subjects"].append(subject)
 
+
 def newArticle(subject):
     article = {}
     article["subject"] = subject
@@ -83,7 +86,8 @@ def newArticle(subject):
 
 with os.popen('bzip2 -cd ' + filename) as file:
     for line in file:
-        m = linePattern.match(unicode(line))
+        # m = linePattern.match(unicode(line))
+        m = linePattern.match(line.decode('UTF-8'))
         if m:
             # Lines consist of [from_article_name] [to_article_name]
             # and are sorted by from_article_name so all related items
@@ -128,4 +132,4 @@ with os.popen('bzip2 -cd ' + filename) as file:
             rowNum += 1
 
             if rowNum % 100000 == 0:
-                print rowNum, subject, linkedSubject
+                print(rowNum, subject, linkedSubject)

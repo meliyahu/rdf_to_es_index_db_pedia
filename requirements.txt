@@ -1,5 +1,5 @@
 #bz2
 #re
-#urllib2
+#urllib
 elasticsearch
 elasticsearch-dsl>=7.0.0,<8.0.0
